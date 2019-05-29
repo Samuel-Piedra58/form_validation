@@ -52,22 +52,51 @@ function hideColorDropDown(isHidden) {
 }
 
 // using the parent node is a challenge. The event will bubble/delegate to unexpected objects when using the parent node attribute.
-
+// Checkbox not working...
+//
 $("fieldset.activities").on("change", 'input[type="checkbox"]', function(e) {
-  const text = e.target.parentNode.textContent;
-  console.log(extractEventDetail(text));
+  const userCheckedBoxParentLabel = e.target.parentNode.textContent;
+  const checkedEvent = extractEventDetail(userCheckedBoxParentLabel);
+  const isChecked = $(this).prop("checked");
+  $('fieldset.activities input[type="checkbox"]').each(function() {
+    const otherCheckbox = $(this).parent();
+    const otherCheckboxParentLabel = otherCheckbox.text();
+    const otherEvent = extractEventDetail(otherCheckboxParentLabel);
+    if (
+      isChecked &&
+      userCheckedBoxParentLabel != otherCheckboxParentLabel &&
+      otherEvent.event_day === checkedEvent.event_day &&
+      ((otherEvent.event_start_time >= checkedEvent.event_start_time &&
+        otherEvent.event_start_time <= checkedEvent.event_end_time) ||
+        (otherEvent.event_end_time <= checkedEvent.event_end_time &&
+          otherEvent.event_end_time >= checkedEvent.event_start_time))
+    ) {
+      otherCheckbox.css("text-decoration", "line-through");
+    } else {
+      otherCheckbox.css("text-decoration", "none");
+    }
+  });
 });
 
 function extractEventDetail(string) {
-  const event_regex = /^(\D*)\s—\s(Tuesday|Wednesday)?\s?(\d\d?)?(am|pm)?-?(\d\d?)?(am|pm)?,?\s?\$(\d{3})$/;
+  const event_regex = /^(\D*)\s+?—\s+?(\r\n|\r|\n)?(Tuesday|Wednesday)?\s*?(\r\n|\r|\n)?(\d\d?)?(am|pm)?-?(\d\d?)?(am|pm)?,?\s*?\$(\d{3})$/;
   return updateEventTime({
-    event_title: string.replace(event_regex, "$1"),
-    event_day: string.replace(event_regex, "$2"),
-    event_start_time: parseInt(string.replace(event_regex, "$3")),
-    event_start_merid: string.replace(event_regex, "$4"),
-    event_end_time: parseInt(string.replace(event_regex, "$5")),
-    event_end_merid: string.replace(event_regex, "$6"),
-    event_cost: parseInt(string.replace(event_regex, "$7"))
+    event_title: string.replace(event_regex, "$1").trim(),
+    event_day: string
+      .replace(event_regex, "$3")
+      .trim()
+      .toLowerCase(),
+    event_start_time: parseInt(string.replace(event_regex, "$5")),
+    event_start_merid: string
+      .replace(event_regex, "$6")
+      .trim()
+      .toLowerCase(),
+    event_end_time: parseInt(string.replace(event_regex, "$7")),
+    event_end_merid: string
+      .replace(event_regex, "$8")
+      .trim()
+      .toLowerCase(),
+    event_cost: parseInt(string.replace(event_regex, "$9"))
   });
 }
 
