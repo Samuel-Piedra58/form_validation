@@ -55,27 +55,42 @@ function hideColorDropDown(isHidden) {
 // Checkbox not working...
 //
 $("fieldset.activities").on("change", 'input[type="checkbox"]', function(e) {
-  const userCheckedBoxParentLabel = e.target.parentNode.textContent;
-  const checkedEvent = extractEventDetail(userCheckedBoxParentLabel);
-  const isChecked = $(this).prop("checked");
+  // Get Text content of check box options
+  const chkboxLabel = e.target.parentNode.textContent;
+  // Pass the text to the extract event detail function to capture the important details for text
+  const clickedEvent = extractEventDetail(chkboxLabel);
+  // Get whether or not the checkbox is checked
+  const clickedEvent_isChecked = $(this).prop("checked");
+  let totalCost = 0;
   $('fieldset.activities input[type="checkbox"]').each(function() {
-    const otherCheckbox = $(this).parent();
-    const otherCheckboxParentLabel = otherCheckbox.text();
-    const otherEvent = extractEventDetail(otherCheckboxParentLabel);
+    // Get the parent label element of the checkbox element
+    const otherChkbox = $(this);
+    // extract the label text
+    const otherChkboxLabel = $(this).parent();
+    // extract the details from the event text
+    const otherEvent = extractEventDetail(otherChkboxLabel.text());
     if (
-      isChecked &&
-      userCheckedBoxParentLabel != otherCheckboxParentLabel &&
-      otherEvent.event_day === checkedEvent.event_day &&
-      ((otherEvent.event_start_time >= checkedEvent.event_start_time &&
-        otherEvent.event_start_time <= checkedEvent.event_end_time) ||
-        (otherEvent.event_end_time <= checkedEvent.event_end_time &&
-          otherEvent.event_end_time >= checkedEvent.event_start_time))
+      chkboxLabel != otherChkboxLabel.text() &&
+      otherEvent.event_day === clickedEvent.event_day &&
+      ((otherEvent.event_start_time >= clickedEvent.event_start_time &&
+        otherEvent.event_start_time <= clickedEvent.event_end_time) ||
+        (otherEvent.event_end_time <= clickedEvent.event_end_time &&
+          otherEvent.event_end_time >= clickedEvent.event_start_time))
     ) {
-      otherCheckbox.css("text-decoration", "line-through");
-    } else {
-      otherCheckbox.css("text-decoration", "none");
+      if (clickedEvent_isChecked) {
+        otherChkboxLabel.css("text-decoration", "line-through");
+        otherChkbox.prop("disabled", true);
+      } else {
+        otherChkboxLabel.css("text-decoration", "none");
+        otherChkbox.prop("disabled", false);
+      }
+    }
+    // Get total cost from all checked items
+    if (otherChkbox.prop("checked")) {
+      totalCost = totalCost + otherEvent.event_cost;
     }
   });
+  console.log(totalCost);
 });
 
 function extractEventDetail(string) {
