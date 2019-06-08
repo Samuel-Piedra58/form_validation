@@ -3,12 +3,26 @@
     Developer: Samuel Piedra
     Date: 05/26/2019
 */
+// Global Variables;
+let totalCalculated = false;
+
 $(document).ready(function() {
   $("#name").focus();
   $("#other-title").hide();
   $("#title").val("full-stack js developer");
   $("#design").val("default");
   hideColorDropDown(true);
+  const paymentFieldset = $("form fieldset:nth-child(4)");
+  paymentFieldset.find("#payment").val("credit card");
+  paymentFieldset.find("#credit-card").show();
+  paymentFieldset
+    .find("div")
+    .eq(4)
+    .hide();
+  paymentFieldset
+    .find("div")
+    .eq(5)
+    .hide();
 });
 
 $("#title").change(function() {
@@ -55,19 +69,14 @@ function hideColorDropDown(isHidden) {
 // Checkbox not working...
 //
 $("fieldset.activities").on("change", 'input[type="checkbox"]', function(e) {
-  // Get Text content of check box options
   const chkboxLabel = e.target.parentNode.textContent;
-  // Pass the text to the extract event detail function to capture the important details for text
   const clickedEvent = extractEventDetail(chkboxLabel);
-  // Get whether or not the checkbox is checked
   const clickedEvent_isChecked = $(this).prop("checked");
   let totalCost = 0;
+
   $('fieldset.activities input[type="checkbox"]').each(function() {
-    // Get the parent label element of the checkbox element
     const otherChkbox = $(this);
-    // extract the label text
     const otherChkboxLabel = $(this).parent();
-    // extract the details from the event text
     const otherEvent = extractEventDetail(otherChkboxLabel.text());
     if (
       chkboxLabel != otherChkboxLabel.text() &&
@@ -90,7 +99,14 @@ $("fieldset.activities").on("change", 'input[type="checkbox"]', function(e) {
       totalCost = totalCost + otherEvent.event_cost;
     }
   });
-  console.log(totalCost);
+  if (!totalCalculated) {
+    $("fieldset.activities").append(
+      $(document.createElement("p")).text(`Total: $${totalCost}`)
+    );
+    totalCalculated = true;
+  } else {
+    $("fieldset.activities p").text(`Total: $${totalCost}`);
+  }
 });
 
 function extractEventDetail(string) {
@@ -126,3 +142,28 @@ function updateEventTime(obj) {
   }
   return obj;
 }
+
+$("#payment").change(function() {
+  const paymentFieldset = $("form fieldset:nth-child(4)");
+  const paymentSelection = paymentFieldset.find("#payment");
+  const paymentCreditCard = paymentFieldset.find("#credit-card");
+  const paymentsPaypal = paymentFieldset.find("div").eq(4);
+  const paymentsBitcoin = paymentFieldset.find("div").eq(5);
+
+  if (
+    paymentSelection.val() === "credit card" ||
+    paymentSelection.val() === "select_method"
+  ) {
+    paymentCreditCard.show();
+    paymentsPaypal.hide();
+    paymentsBitcoin.hide();
+  } else if (paymentSelection.val() === "paypal") {
+    paymentCreditCard.hide();
+    paymentsPaypal.show();
+    paymentsBitcoin.hide();
+  } else {
+    paymentCreditCard.hide();
+    paymentsPaypal.hide();
+    paymentsBitcoin.show();
+  }
+});
