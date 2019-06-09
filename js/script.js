@@ -87,10 +87,10 @@ $("fieldset.activities").on("change", 'input[type="checkbox"]', function(e) {
           otherEvent.event_end_time >= clickedEvent.event_start_time))
     ) {
       if (clickedEvent_isChecked) {
-        otherChkboxLabel.css("text-decoration", "line-through");
+        otherChkboxLabel.css("color", "grey");
         otherChkbox.prop("disabled", true);
       } else {
-        otherChkboxLabel.css("text-decoration", "none");
+        otherChkboxLabel.css("color", "#000");
         otherChkbox.prop("disabled", false);
       }
     }
@@ -167,3 +167,39 @@ $("#payment").change(function() {
     paymentsBitcoin.show();
   }
 });
+
+$('button[type="submit"').click(function(e) {
+  e.preventDefault();
+});
+
+/*
+  ***********************
+  Form Field VAlidators
+  ***********************
+*/
+function isValidName(name) {
+  return /\w+/.test(name);
+}
+
+function isValidEmail(email) {
+  return /^[^@]+@[^@.]+\.[a-z]+$/i.test(email);
+}
+
+function isValidActivities(activities) {
+  let valid = false;
+  activities.each(function() {
+    if (this.checked) {
+      valid = true;
+    }
+  });
+  return valid;
+}
+
+// Change form input to notify user if input is invalid
+function fieldAlert(field, isValid) {
+  if (isValid) {
+    field.css("border", "solid #c1deeb 2px");
+  } else {
+    field.css("border", "solid red 4px");
+  }
+}
