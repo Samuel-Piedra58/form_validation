@@ -4,99 +4,96 @@
     Date: 05/26/2019
 */
 // Global Variables;
+const nameField = $("#name");
+const emailField = $("#mail");
+const jobField = $("#title");
+const otherJobField = $("#other-title");
+const colorDropDown = $("#color");
+const tShirtDesignField = $("#design");
+const activitiesField = $("fieldset.activities");
+const activitiesLegend = $("fieldset.activities legend");
+const activitiesCheckboxes = $('fieldset.activities input[type="checkbox"]');
+const paymentFieldset = $("form fieldset:nth-child(4)");
+const paymentSelection = paymentFieldset.find("#payment");
+const paymentCreditCard = paymentFieldset.find("#credit-card");
+const paymentCardNumber = $("#cc-num");
+const paymentZipCode = $("#zip");
+const paymentCvv = $("#cvv");
+const paymentsPaypal = paymentFieldset.find("div").eq(4);
+const paymentsBitcoin = paymentFieldset.find("div").eq(5);
 let totalCalculated = false;
 
-$(document).ready(function() {
-  $("#name").focus();
-  $("#other-title").hide();
-  $("#title").val("full-stack js developer");
-  $("#design").val("default");
-  hideColorDropDown(true);
-  const paymentFieldset = $("form fieldset:nth-child(4)");
-  paymentFieldset.find("#payment").val("credit card");
-  paymentFieldset.find("#credit-card").show();
-  paymentFieldset
-    .find("div")
-    .eq(4)
-    .hide();
-  paymentFieldset
-    .find("div")
-    .eq(5)
-    .hide();
-});
+// Force Reset of Fields
+nameField.focus();
+otherJobField.hide();
+jobField.val("full-stack js developer");
+tShirtDesignField.val("default");
+hideColorDropDown(true);
+paymentsPaypal.hide();
+paymentsBitcoin.hide();
+paymentCreditCard.show();
 
-$("#title").change(function() {
+jobField.change(function() {
   const selectedTitle = $("#title option:selected");
-  if (selectedTitle.val() === "other") {
-    $("#other-title").show();
-  } else {
-    $("#other-title").hide();
-  }
+  selectedTitle.val() === "other" ? otherJobField.show() : otherJobField.hide();
 });
 
-$("#design").change(function() {
-  const selectedDesign = $("#design option:selected");
-  const colorSelect = $("#color");
+tShirtDesignField.change(function() {
+  const selectedDesign = $("#design option:selected").val();
   const colorOptions = $("#color option");
   const regex = /JS Puns shirt only/;
-  hideColorDropDown(false);
   colorOptions.each(function() {
-    if (selectedDesign.val() === "js puns") {
-      colorSelect.val("cornflowerblue");
-      regex.test($(this).text()) ? $(this).show() : $(this).hide();
-    } else if (selectedDesign.val() === "heart js") {
-      colorSelect.val("tomato");
-      !regex.test($(this).text()) ? $(this).show() : $(this).hide();
+    const currentColor = $(this).text();
+    if (selectedDesign === "js puns") {
+      colorDropDown.val("cornflowerblue");
+      regex.test(currentColor) ? $(this).show() : $(this).hide();
     } else {
-      $(this).show();
+      colorDropDown.val("tomato");
+      regex.test(currentColor) ? $(this).hide() : $(this).show();
     }
   });
+  hideColorDropDown(false);
 });
 
 function hideColorDropDown(isHidden) {
-  const colorDropDown = $("#color");
-  const colorLabel = colorDropDown.prev();
   if (isHidden) {
     colorDropDown.hide();
-    colorLabel.text("Please select a T-shirt theme");
+    colorDropDown.prev().text("Please select a T-shirt theme");
   } else {
     colorDropDown.show();
-    colorLabel.text("Color:");
+    colorDropDown.prev().text("Color:");
   }
 }
 
-// using the parent node is a challenge. The event will bubble/delegate to unexpected objects when using the parent node attribute.
-// Checkbox not working...
-//
-$("fieldset.activities").on("change", 'input[type="checkbox"]', function(e) {
-  const chkboxLabel = e.target.parentNode.textContent;
-  const clickedEvent = extractEventDetail(chkboxLabel);
-  const clickedEvent_isChecked = $(this).prop("checked");
+activitiesField.on("change", 'input[type="checkbox"]', function(e) {
+  const cbLabel = e.target.parentNode.textContent;
+  const cEvent = extractEventDetail(cbLabel);
+  const cEvent_isChecked = $(this).prop("checked");
   let totalCost = 0;
 
-  $('fieldset.activities input[type="checkbox"]').each(function() {
-    const otherChkbox = $(this);
-    const otherChkboxLabel = $(this).parent();
-    const otherEvent = extractEventDetail(otherChkboxLabel.text());
+  activitiesCheckboxes.each(function() {
+    const oBox = $(this);
+    const obLabel = $(this).parent();
+    const oEvent = extractEventDetail(obLabel.text());
     if (
-      chkboxLabel != otherChkboxLabel.text() &&
-      otherEvent.event_day === clickedEvent.event_day &&
-      ((otherEvent.event_start_time >= clickedEvent.event_start_time &&
-        otherEvent.event_start_time <= clickedEvent.event_end_time) ||
-        (otherEvent.event_end_time <= clickedEvent.event_end_time &&
-          otherEvent.event_end_time >= clickedEvent.event_start_time))
+      cbLabel != obLabel.text() &&
+      oEvent.event_day === cEvent.event_day &&
+      ((oEvent.event_start_time >= cEvent.event_start_time &&
+        oEvent.event_start_time <= cEvent.event_end_time) ||
+        (oEvent.event_end_time <= cEvent.event_end_time &&
+          oEvent.event_end_time >= cEvent.event_start_time))
     ) {
-      if (clickedEvent_isChecked) {
-        otherChkboxLabel.css("color", "grey");
-        otherChkbox.prop("disabled", true);
+      if (cEvent_isChecked) {
+        obLabel.css("color", "grey");
+        oBox.prop("disabled", true);
       } else {
-        otherChkboxLabel.css("color", "#000");
-        otherChkbox.prop("disabled", false);
+        obLabel.css("color", "#000");
+        oBox.prop("disabled", false);
       }
     }
     // Get total cost from all checked items
-    if (otherChkbox.prop("checked")) {
-      totalCost = totalCost + otherEvent.event_cost;
+    if (oBox.prop("checked")) {
+      totalCost = totalCost + cEvent.event_cost;
     }
   });
   if (!totalCalculated) {
@@ -144,23 +141,17 @@ function updateEventTime(obj) {
 }
 
 $("#payment").change(function() {
-  const paymentFieldset = $("form fieldset:nth-child(4)");
-  const paymentSelection = paymentFieldset.find("#payment");
-  const paymentCreditCard = paymentFieldset.find("#credit-card");
-  const paymentsPaypal = paymentFieldset.find("div").eq(4);
-  const paymentsBitcoin = paymentFieldset.find("div").eq(5);
-
   if (
     paymentSelection.val() === "credit card" ||
     paymentSelection.val() === "select_method"
   ) {
-    paymentCreditCard.show();
     paymentsPaypal.hide();
     paymentsBitcoin.hide();
+    paymentCreditCard.show();
   } else if (paymentSelection.val() === "paypal") {
     paymentCreditCard.hide();
-    paymentsPaypal.show();
     paymentsBitcoin.hide();
+    paymentsPaypal.show();
   } else {
     paymentCreditCard.hide();
     paymentsPaypal.hide();
@@ -168,13 +159,9 @@ $("#payment").change(function() {
   }
 });
 
-$('button[type="submit"').click(function(e) {
-  e.preventDefault();
-});
-
 /*
   ***********************
-  Form Field VAlidators
+  Form Field Validators
   ***********************
 */
 function isValidName(name) {
@@ -195,11 +182,68 @@ function isValidActivities(activities) {
   return valid;
 }
 
-// Change form input to notify user if input is invalid
-function fieldAlert(field, isValid) {
-  if (isValid) {
-    field.css("border", "solid #c1deeb 2px");
-  } else {
-    field.css("border", "solid red 4px");
+function isValidCreditCard(number) {
+  return /^\d{13,16}$/.test(number);
+}
+
+function isValidZip(number) {
+  return /^\d{5}$/.test(number);
+}
+
+function isValidCvv(number) {
+  return /^\d{3}$/.test(number);
+}
+
+/*
+  ***********************
+ Validation Styling
+  ***********************
+*/
+
+function formAlert(isValid, elementInput = 0, elementLegend = 0) {
+  if (elementInput !== 0) {
+    errorFormatInput(elementInput, isValid);
+  }
+  if (elementLegend !== 0) {
+    errorFormatLegend(elementLegend, isValid);
   }
 }
+
+function errorFormatInput(element, isValid) {
+  if (isValid) {
+    element.css("border", "solid #c1deeb 2px");
+  } else {
+    element.css("border", "solid red 2px");
+  }
+}
+
+function errorFormatLegend(element, isValid) {
+  if (isValid) {
+    element.css("color", "#000");
+    element.css("fontWeight", "400");
+  } else {
+    element.css("color", "red");
+    element.css("fontWeight", "600");
+  }
+}
+
+$('button[type="submit"').click(function(e) {
+  e.preventDefault();
+
+  formAlert(isValidName(nameField.val()), nameField, nameField.prev());
+  formAlert(isValidEmail(emailField.val()), emailField, emailField.prev());
+  formAlert(isValidActivities(activitiesCheckboxes), 0, activitiesLegend);
+  if (paymentSelection.val() == "credit card") {
+    formAlert(
+      isValidCreditCard(paymentCardNumber.val()),
+      paymentCardNumber,
+      paymentCardNumber.prev()
+    );
+    formAlert(
+      isValidZip(paymentZipCode.val()),
+      paymentZipCode,
+      paymentZipCode.prev()
+    );
+    formAlert(isValidCvv(paymentCvv.val()), paymentCvv, paymentCvv.prev());
+  }
+});
