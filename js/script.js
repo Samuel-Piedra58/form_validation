@@ -21,23 +21,33 @@ const paymentZipCode = $("#zip");
 const paymentCvv = $("#cvv");
 const paymentsPaypal = paymentFieldset.find("div").eq(4);
 const paymentsBitcoin = paymentFieldset.find("div").eq(5);
+const registerButton = $('button[type="submit"');
 let totalCalculated = false;
 
-// Force Reset of Fields
-nameField.focus();
-otherJobField.hide();
-jobField.val("full-stack js developer");
-tShirtDesignField.val("default");
-hideColorDropDown(true);
-paymentsPaypal.hide();
-paymentsBitcoin.hide();
-paymentCreditCard.show();
+// Force Reset of Fields - Executed @ end of script
+function resetForm() {
+  nameField.focus();
+  otherJobField.hide();
+  jobField.val("full-stack js developer");
+  tShirtDesignField.val("default");
+  toggleColorDropDown(true);
+  paymentsPaypal.hide();
+  paymentsBitcoin.hide();
+  paymentCreditCard.show();
+}
 
+// Show or hide "Other Job Field"
 jobField.change(function() {
   const selectedTitle = $("#title option:selected");
   selectedTitle.val() === "other" ? otherJobField.show() : otherJobField.hide();
 });
 
+/*
+  ************************
+  T-Shirt Info Section
+  ************************
+*/
+// Toggle T-Shirt Options, pending the user's selection of the Design
 tShirtDesignField.change(function() {
   const selectedDesign = $("#design option:selected").val();
   const colorOptions = $("#color option");
@@ -52,10 +62,11 @@ tShirtDesignField.change(function() {
       regex.test(currentColor) ? $(this).hide() : $(this).show();
     }
   });
-  hideColorDropDown(false);
+  toggleColorDropDown(false);
 });
 
-function hideColorDropDown(isHidden) {
+// Toggle the display of "Color:" dropdown"
+function toggleColorDropDown(isHidden) {
   if (isHidden) {
     colorDropDown.hide();
     colorDropDown.prev().text("Please select a T-shirt theme");
@@ -64,6 +75,12 @@ function hideColorDropDown(isHidden) {
     colorDropDown.prev().text("Color:");
   }
 }
+
+/*
+  ************************
+  Register for Activities Section
+  ************************
+*/
 
 activitiesField.on("change", 'input[type="checkbox"]', function(e) {
   const cbLabel = e.target.parentNode.textContent;
@@ -106,6 +123,7 @@ activitiesField.on("change", 'input[type="checkbox"]', function(e) {
   }
 });
 
+// Function will intake the string of the label of the checkbox and parse the information to return an event object
 function extractEventDetail(string) {
   const event_regex = /^(\D*)\s+?—\s+?(\r\n|\r|\n)?(Tuesday|Wednesday)?\s*?(\r\n|\r|\n)?(\d\d?)?(am|pm)?-?(\d\d?)?(am|pm)?,?\s*?\$(\d{3})$/;
   return updateEventTime({
@@ -128,6 +146,7 @@ function extractEventDetail(string) {
   });
 }
 
+// Function will convert the event start/event end times to a 24 hour time
 function updateEventTime(obj) {
   // calculate start time
   if (obj.event_start_merid === "pm" && obj.event_start_time != "12") {
@@ -140,24 +159,28 @@ function updateEventTime(obj) {
   return obj;
 }
 
-$("#payment").change(function() {
-  if (
-    paymentSelection.val() === "credit card" ||
-    paymentSelection.val() === "select_method"
-  ) {
-    paymentsPaypal.hide();
-    paymentsBitcoin.hide();
-    paymentCreditCard.show();
-  } else if (paymentSelection.val() === "paypal") {
-    paymentCreditCard.hide();
-    paymentsBitcoin.hide();
-    paymentsPaypal.show();
+/*
+  ************************
+  Payment Info Section
+  ************************
+*/
+
+paymentSelection.change(function() {
+  const payChoice = $(this).val();
+  if (payChoice === "credit card") {
+    togglePayment(paymentCreditCard, paymentsPaypal, paymentsBitcoin);
+  } else if (payChoice === "paypal") {
+    togglePayment(paymentsPaypal, paymentCreditCard, paymentsBitcoin);
   } else {
-    paymentCreditCard.hide();
-    paymentsPaypal.hide();
-    paymentsBitcoin.show();
+    togglePayment(paymentsBitcoin, paymentCreditCard, paymentsPaypal);
   }
 });
+
+function togglePayment(sPayment, hPayment1, hPayment2) {
+  sPayment.show();
+  hPayment1.hide();
+  hPayment2.hide();
+}
 
 /*
   ***********************
@@ -197,53 +220,52 @@ function isValidCvv(number) {
 /*
   ***********************
  Validation Styling
+  - Class styling added under "Helper Classes"
   ***********************
 */
 
-function formAlert(isValid, elementInput = 0, elementLegend = 0) {
-  if (elementInput !== 0) {
-    errorFormatInput(elementInput, isValid);
-  }
-  if (elementLegend !== 0) {
-    errorFormatLegend(elementLegend, isValid);
-  }
+function valBorder(element, isValid) {
+  isValid ? element.removeClass("err-border") : element.addClass("err-border");
 }
 
-function errorFormatInput(element, isValid) {
-  if (isValid) {
-    element.css("border", "solid #c1deeb 2px");
-  } else {
-    element.css("border", "solid red 2px");
-  }
+function valText(element, isValid) {
+  isValid ? element.removeClass("err-label") : element.addClass("err-label");
 }
 
-function errorFormatLegend(element, isValid) {
-  if (isValid) {
-    element.css("color", "#000");
-    element.css("fontWeight", "400");
-  } else {
-    element.css("color", "red");
-    element.css("fontWeight", "600");
-  }
-}
+/*
+  ***********************
+  Add Event Listeners Event
+  ***********************
+*/
 
-$('button[type="submit"').click(function(e) {
-  e.preventDefault();
+const runListeners = function() {
+  nameField.on("input focusout", createHandler(isValidName));
 
-  formAlert(isValidName(nameField.val()), nameField, nameField.prev());
-  formAlert(isValidEmail(emailField.val()), emailField, emailField.prev());
-  formAlert(isValidActivities(activitiesCheckboxes), 0, activitiesLegend);
-  if (paymentSelection.val() == "credit card") {
-    formAlert(
-      isValidCreditCard(paymentCardNumber.val()),
-      paymentCardNumber,
-      paymentCardNumber.prev()
-    );
-    formAlert(
-      isValidZip(paymentZipCode.val()),
-      paymentZipCode,
-      paymentZipCode.prev()
-    );
-    formAlert(isValidCvv(paymentCvv.val()), paymentCvv, paymentCvv.prev());
+  emailField.on("input focusout", createHandler(isValidEmail));
+
+  if (paymentSelection.val() === "credit card") {
+    paymentCardNumber.on("input focusout", createHandler(isValidCreditCard));
   }
-});
+
+  paymentZipCode.on("input focusout", createHandler(isValidZip));
+
+  paymentCvv.on("input focusout", createHandler(isValidCvv));
+
+  activitiesField.on("change", function() {
+    activitiesCheckboxes;
+    const valid = isValidActivities(activitiesCheckboxes);
+    valText(activitiesLegend, valid);
+  });
+
+  function createHandler(validator) {
+    return function() {
+      const text = $(this).val();
+      const valid = validator(text);
+      valBorder($(this), valid);
+      valText($(this).prev(), valid);
+    };
+  }
+};
+
+resetForm();
+runListeners();
