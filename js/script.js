@@ -1,178 +1,254 @@
 /*
     Adding Form Validation and Interactivity with Javascript/jQuery
     Developer: Samuel Piedra
-    Date: 05/26/2019
+    Date Started: 05/26/2019
+    Last Modiefied: 06/16/2019
 */
-// Global Variables;
-const nameField = $("#name");
-const emailField = $("#mail");
-const jobField = $("#title");
-const otherJobField = $("#other-title");
-const colorDropDown = $("#color");
-const tShirtDesignField = $("#design");
-const activitiesField = $("fieldset.activities");
-const activitiesLegend = $("fieldset.activities legend");
-const activitiesCheckboxes = $('fieldset.activities input[type="checkbox"]');
+// Get Form Elements -- Global Variables
+const nameInput = $("#name");
+const emailInput = $("#mail");
+const jobRoleSelection = $("#title");
+const otherJobRoleInput = $("#other-title");
+const tShirtDesignSelection = $("#design");
+const tShirtColorSelection = $("#color");
+const registerForActivitiesFieldset = $("fieldset.activities");
+const registerForActivitiesLegend = $("fieldset.activities legend");
+const registerForActivitiesCheckboxes = $(
+  'fieldset.activities input[type="checkbox"]'
+);
 const paymentFieldset = $("form fieldset:nth-child(4)");
-const paymentSelection = paymentFieldset.find("#payment");
-const paymentCreditCard = paymentFieldset.find("#credit-card");
-const paymentCardNumber = $("#cc-num");
-const paymentZipCode = $("#zip");
-const paymentCvv = $("#cvv");
-const paymentsPaypal = paymentFieldset.find("div").eq(4);
-const paymentsBitcoin = paymentFieldset.find("div").eq(5);
-const registerButton = $('button[type="submit"');
-let totalCalculated = false;
+const paymentSelection = $("#payment");
+const paymentCreditCardDiv = $("#credit-card");
+const paymentPaypalDiv = paymentFieldset.find("div").eq(4);
+const paymentBitcoinDiv = paymentFieldset.find("div").eq(5);
+const paymentCardNumberInput = $("#cc-num");
+const paymentZipCodeInput = $("#zip");
+const paymentCvvInput = $("#cvv");
+let isCostParagraphDisplayed = false;
 
 // Force Reset of Fields - Executed @ end of script
 function resetForm() {
-  nameField.focus();
-  otherJobField.hide();
-  jobField.val("full-stack js developer");
-  tShirtDesignField.val("default");
-  toggleColorDropDown(true);
-  paymentsPaypal.hide();
-  paymentsBitcoin.hide();
-  paymentCreditCard.show();
+  nameInput.focus();
+  otherJobRoleInput.hide();
+  jobRoleSelection.val("full-stack js developer");
+  tShirtDesignSelection.val("default");
+  hideShirtColorSelection();
+  paymentPaypalDiv.hide();
+  paymentBitcoinDiv.hide();
+  paymentCreditCardDiv.show();
 }
 
-// Show or hide "Other Job Field"
-jobField.change(function() {
-  const selectedTitle = $("#title option:selected");
-  selectedTitle.val() === "other" ? otherJobField.show() : otherJobField.hide();
+/*
+ *********************************************
+ ***Job Role Input Section
+ *********************************************
+ */
+jobRoleSelection.change(function() {
+  if ($(this).val() === "other") {
+    otherJobRoleInput.show();
+  } else {
+    otherJobRoleInput.hide();
+  }
 });
 
 /*
-  ************************
-  T-Shirt Info Section
-  ************************
-*/
-// Toggle T-Shirt Options, pending the user's selection of the Design
-tShirtDesignField.change(function() {
-  const selectedDesign = $("#design option:selected").val();
-  const colorOptions = $("#color option");
-  const regex = /JS Puns shirt only/;
-  colorOptions.each(function() {
-    const currentColor = $(this).text();
-    if (selectedDesign === "js puns") {
-      colorDropDown.val("cornflowerblue");
-      regex.test(currentColor) ? $(this).show() : $(this).hide();
-    } else {
-      colorDropDown.val("tomato");
-      regex.test(currentColor) ? $(this).hide() : $(this).show();
-    }
+ *********************************************
+ ***T-Shirt Info Section
+ *********************************************
+ */
+tShirtDesignSelection.change(function() {
+  $("#color option").each(function() {
+    filterColorOption($(this));
   });
-  toggleColorDropDown(false);
+  setDefaultShirtColorOption();
+  showShirtColorSelection();
 });
 
-// Toggle the display of "Color:" dropdown"
-function toggleColorDropDown(isHidden) {
-  if (isHidden) {
-    colorDropDown.hide();
-    colorDropDown.prev().text("Please select a T-shirt theme");
+function filterColorOption(color) {
+  const regex = /JS Puns shirt only/;
+  if (tShirtDesignSelection.val() === "js puns") {
+    regex.test(color.text()) ? color.show() : color.hide();
   } else {
-    colorDropDown.show();
-    colorDropDown.prev().text("Color:");
+    regex.test(color.text()) ? color.hide() : color.show();
   }
 }
 
-/*
-  ************************
-  Register for Activities Section
-  ************************
-*/
+function setDefaultShirtColorOption() {
+  if (tShirtDesignSelection.val() === "js puns") {
+    tShirtColorSelection.val("cornflowerblue");
+  } else {
+    tShirtColorSelection.val("tomato");
+  }
+}
 
-activitiesField.on("change", 'input[type="checkbox"]', function(e) {
-  const cbLabel = e.target.parentNode.textContent;
-  const cEvent = extractEventDetail(cbLabel);
-  const cEvent_isChecked = $(this).prop("checked");
+function showShirtColorSelection() {
+  tShirtColorSelection.show();
+  tShirtColorSelection.prev().text("Color:");
+}
+
+function hideShirtColorSelection() {
+  tShirtColorSelection.hide();
+  tShirtColorSelection.prev().text("Please select a T-shirt theme");
+}
+
+/*
+ *********************************************
+ ***Register for Activities Section
+ *********************************************
+ */
+
+registerForActivitiesFieldset.on("change", 'input[type="checkbox"]', function(
+  event
+) {
+  const changedActivityLabelText = event.target.parentNode.textContent;
+  const changedActivity = createActivityObject(changedActivityLabelText);
+  const changedActivity_isChecked = $(this).prop("checked");
   let totalCost = 0;
 
-  activitiesCheckboxes.each(function() {
-    const oBox = $(this);
-    const obLabel = $(this).parent();
-    const oEvent = extractEventDetail(obLabel.text());
-    if (
-      cbLabel != obLabel.text() &&
-      oEvent.event_day === cEvent.event_day &&
-      ((oEvent.event_start_time >= cEvent.event_start_time &&
-        oEvent.event_start_time <= cEvent.event_end_time) ||
-        (oEvent.event_end_time <= cEvent.event_end_time &&
-          oEvent.event_end_time >= cEvent.event_start_time))
-    ) {
-      if (cEvent_isChecked) {
-        obLabel.css("color", "grey");
-        oBox.prop("disabled", true);
-      } else {
-        obLabel.css("color", "#000");
-        oBox.prop("disabled", false);
-      }
+  registerForActivitiesCheckboxes.each(function() {
+    const otherActivityCheckbox = $(this);
+    const otherActivityLabel = $(this).parent();
+    const otherActivityLabelText = otherActivityLabel.text();
+    const otherActivity = createActivityObject(otherActivityLabelText);
+    const otherActivity_isChecked = otherActivityCheckbox.prop("checked");
+    const labelsMatch = activityLabelsMatch(
+      otherActivityLabelText,
+      changedActivityLabelText
+    );
+    const timesOverlap = activityTimesOverlap(otherActivity, changedActivity);
+
+    if (!labelsMatch && timesOverlap && changedActivity_isChecked) {
+      disableActivityCheckbox(otherActivityLabel, otherActivityCheckbox);
+    } else {
+      enableActivityCheckbox(otherActivityLabel, otherActivityCheckbox);
     }
-    // Get total cost from all checked items
-    if (oBox.prop("checked")) {
-      totalCost = totalCost + cEvent.event_cost;
+
+    if (otherActivity_isChecked) {
+      totalCost += otherActivity.cost;
     }
   });
-  if (!totalCalculated) {
-    $("fieldset.activities").append(
-      $(document.createElement("p")).text(`Total: $${totalCost}`)
-    );
-    totalCalculated = true;
+
+  if (totalCost > 0) {
+    if (!isCostParagraphDisplayed) {
+      addCostInfoAddCostParagraph(totalCost);
+    } else {
+      updateCostInfo(totalCost);
+    }
   } else {
-    $("fieldset.activities p").text(`Total: $${totalCost}`);
+    removeCostInfoRemoveCostParagraph();
   }
 });
 
-// Function will intake the string of the label of the checkbox and parse the information to return an event object
-function extractEventDetail(string) {
+function createActivityObject(activityText) {
   const event_regex = /^(\D*)\s+?—\s+?(\r\n|\r|\n)?(Tuesday|Wednesday)?\s*?(\r\n|\r|\n)?(\d\d?)?(am|pm)?-?(\d\d?)?(am|pm)?,?\s*?\$(\d{3})$/;
-  return updateEventTime({
-    event_title: string.replace(event_regex, "$1").trim(),
-    event_day: string
-      .replace(event_regex, "$3")
+
+  function replaceText(regexGroup) {
+    return activityText
+      .replace(event_regex, regexGroup)
       .trim()
-      .toLowerCase(),
-    event_start_time: parseInt(string.replace(event_regex, "$5")),
-    event_start_merid: string
-      .replace(event_regex, "$6")
-      .trim()
-      .toLowerCase(),
-    event_end_time: parseInt(string.replace(event_regex, "$7")),
-    event_end_merid: string
-      .replace(event_regex, "$8")
-      .trim()
-      .toLowerCase(),
-    event_cost: parseInt(string.replace(event_regex, "$9"))
-  });
+      .toLowerCase();
+  }
+
+  const conferenceActivity = {
+    title: replaceText("$1"),
+    day: replaceText("$3"),
+    start_time: parseInt(replaceText("$5")),
+    start_ampm: replaceText("$6"),
+    end_time: parseInt(replaceText("$7")),
+    end_ampm: replaceText("$8"),
+    cost: parseInt(replaceText("$9"))
+  };
+
+  function normalizeActivityTimes(activity) {
+    if (activity.start_time != "12" && activity.start_ampm === "pm") {
+      activity.start_time += 12;
+    }
+    if (activity.end_time != "12" && activity.end_ampm === "pm") {
+      activity.end_time += 12;
+    }
+    return activity;
+  }
+
+  return normalizeActivityTimes(conferenceActivity);
 }
 
-// Function will convert the event start/event end times to a 24 hour time
-function updateEventTime(obj) {
-  // calculate start time
-  if (obj.event_start_merid === "pm" && obj.event_start_time != "12") {
-    obj.event_start_time = obj.event_start_time + 12;
+function activityLabelsMatch(labelA, labelB) {
+  if (labelA === labelB) {
+    return true;
   }
-  // calculate end time
-  if (obj.event_end_merid === "pm" && obj.event_end_time != "12") {
-    obj.event_end_time = obj.event_end_time + 12;
+}
+function activityTimesOverlap(a, b) {
+  if (
+    a.day === b.day &&
+    ((b.start_time <= a.start_time && a.start_time <= b.end_time) ||
+      (b.start_time <= a.end_time && a.end_time <= b.end_time))
+  ) {
+    return true;
   }
-  return obj;
+}
+
+function disableActivityCheckbox(label, checkbox) {
+  label.css("color", "grey");
+  checkbox.prop("disabled", true);
+}
+
+function enableActivityCheckbox(label, checkbox) {
+  label.css("color", "#000");
+  checkbox.prop("disabled", false);
+}
+
+function createParagraph() {
+  return $(document.createElement("p"));
+}
+
+function getParagraphFromActivitiesFieldset() {
+  return registerForActivitiesFieldset.find("p");
+}
+
+function appendParagraphToActivitiesFieldset() {
+  const paragraphToAppend = createParagraph();
+  registerForActivitiesFieldset.append(paragraphToAppend);
+  return getParagraphFromActivitiesFieldset();
+}
+
+function removeParagraphFromActivitiesFieldset() {
+  const paragraph = getParagraphFromActivitiesFieldset();
+  paragraph.remove();
+}
+
+function addCostInfoAddCostParagraph(cost) {
+  const costInfo = `Total Cost: $${cost}`;
+  const costParagraph = appendParagraphToActivitiesFieldset();
+  costParagraph.text(costInfo);
+  isCostParagraphDisplayed = true;
+}
+
+function updateCostInfo(cost) {
+  const costInfo = `Total Cost: $${cost}`;
+  const costParagraph = getParagraphFromActivitiesFieldset();
+  costParagraph.text(costInfo);
+}
+
+function removeCostInfoRemoveCostParagraph() {
+  removeParagraphFromActivitiesFieldset();
+  isCostParagraphDisplayed = false;
 }
 
 /*
-  ************************
-  Payment Info Section
-  ************************
-*/
-
+ *********************************************
+ ***Payment Info Section
+ *********************************************
+ */
 paymentSelection.change(function() {
   const payChoice = $(this).val();
   if (payChoice === "credit card") {
-    togglePayment(paymentCreditCard, paymentsPaypal, paymentsBitcoin);
+    togglePayment(paymentCreditCardDiv, paymentPaypalDiv, paymentBitcoinDiv);
   } else if (payChoice === "paypal") {
-    togglePayment(paymentsPaypal, paymentCreditCard, paymentsBitcoin);
+    togglePayment(paymentPaypalDiv, paymentCreditCardDiv, paymentBitcoinDiv);
+    clearCreditCardData();
   } else {
-    togglePayment(paymentsBitcoin, paymentCreditCard, paymentsPaypal);
+    togglePayment(paymentBitcoinDiv, paymentCreditCardDiv, paymentPaypalDiv);
+    clearCreditCardData();
   }
 });
 
@@ -182,11 +258,22 @@ function togglePayment(sPayment, hPayment1, hPayment2) {
   hPayment2.hide();
 }
 
+function clearCreditCardData() {
+  clearFormInput(paymentCardNumberInput);
+  clearFormInput(paymentZipCodeInput);
+  clearFormInput(paymentCvvInput);
+}
+function clearFormInput(targetElement) {
+  targetElement.val("");
+  toggleErrBorder(targetElement, true);
+  toggleErrLabel(targetElement.prev(), true);
+}
+
 /*
-  ***********************
-  Form Field Validators
-  ***********************
-*/
+ *********************************************
+ ***Form Validators Section
+ *********************************************
+ */
 function isValidName(name) {
   return /\w+/.test(name);
 }
@@ -195,9 +282,9 @@ function isValidEmail(email) {
   return /^[^@]+@[^@.]+\.[a-z]+$/i.test(email);
 }
 
-function isValidActivities(activities) {
+function isValidActivities(registerForActivitiesCheckboxes) {
   let valid = false;
-  activities.each(function() {
+  registerForActivitiesCheckboxes.each(function() {
     if (this.checked) {
       valid = true;
     }
@@ -223,49 +310,74 @@ function isValidCvv(number) {
   - Class styling added under "Helper Classes"
   ***********************
 */
-
-function valBorder(element, isValid) {
+function toggleErrBorder(element, isValid) {
   isValid ? element.removeClass("err-border") : element.addClass("err-border");
 }
 
-function valText(element, isValid) {
+function toggleErrLabel(element, isValid) {
   isValid ? element.removeClass("err-label") : element.addClass("err-label");
 }
 
 /*
-  ***********************
-  Add Event Listeners Event
-  ***********************
-*/
+ *********************************************
+ ***Adding Event Listeners
+ *********************************************
+ */
 
-const runListeners = function() {
-  nameField.on("input focusout", createHandler(isValidName));
+nameInput.on("input focusout", createHandler(isValidName));
 
-  emailField.on("input focusout", createHandler(isValidEmail));
+emailInput.on("input focusout", createHandler(isValidEmail));
 
-  if (paymentSelection.val() === "credit card") {
-    paymentCardNumber.on("input focusout", createHandler(isValidCreditCard));
+paymentCardNumberInput.on("input focusout", createHandler(isValidCreditCard));
+
+paymentZipCodeInput.on("input focusout", createHandler(isValidZip));
+
+paymentCvvInput.on("input focusout", createHandler(isValidCvv));
+
+registerForActivitiesFieldset.on("change", function() {
+  const valid = isValidActivities(registerForActivitiesCheckboxes);
+  toggleErrLabel(registerForActivitiesLegend, valid);
+});
+
+function createHandler(validator) {
+  return function() {
+    const text = $(this).val();
+    const valid = validator(text);
+    toggleErrBorder($(this), valid);
+    toggleErrLabel($(this).prev(), valid);
+  };
+}
+
+function isFormValid() {
+  if (
+    !isValidName(nameInput.val()) ||
+    !isValidEmail(emailInput.val()) ||
+    !isValidActivities(registerForActivitiesCheckboxes) ||
+    (paymentSelection.val() === "credit card" &&
+      (!isValidCreditCard(paymentCardNumberInput.val()) ||
+        !isValidZip(paymentZipCodeInput.val()) ||
+        !isValidCvv(paymentCvvInput.val())))
+  ) {
+    return false;
   }
+  return true;
+}
 
-  paymentZipCode.on("input focusout", createHandler(isValidZip));
+function triggerEventsHandlers() {
+  nameInput.trigger("input");
+  emailInput.trigger("input");
+  paymentCardNumberInput.trigger("input");
+  paymentZipCodeInput.trigger("input");
+  paymentCvvInput.trigger("input");
+  registerForActivitiesFieldset.trigger("change");
+}
 
-  paymentCvv.on("input focusout", createHandler(isValidCvv));
-
-  activitiesField.on("change", function() {
-    activitiesCheckboxes;
-    const valid = isValidActivities(activitiesCheckboxes);
-    valText(activitiesLegend, valid);
-  });
-
-  function createHandler(validator) {
-    return function() {
-      const text = $(this).val();
-      const valid = validator(text);
-      valBorder($(this), valid);
-      valText($(this).prev(), valid);
-    };
+$("form").on("submit", function(event) {
+  const validationSuccess = isFormValid();
+  triggerEventsHandlers();
+  if (!validationSuccess) {
+    event.preventDefault();
   }
-};
+});
 
 resetForm();
-runListeners();
