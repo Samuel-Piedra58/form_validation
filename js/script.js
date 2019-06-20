@@ -1,5 +1,5 @@
 /*
-    Adding Form Validation and Interactivity with Javascript/jQuery
+    Adding Form Validation and Interactivity with Javascript/jQuery to index.html
     Developer: Samuel Piedra
     Date Started: 05/26/2019
     Last Modiefied: 06/16/2019
@@ -11,11 +11,9 @@ const jobRoleSelection = $("#title");
 const otherJobRoleInput = $("#other-title");
 const tShirtDesignSelection = $("#design");
 const tShirtColorSelection = $("#color");
-const registerForActivitiesFieldset = $("fieldset.activities");
-const registerForActivitiesLegend = $("fieldset.activities legend");
-const registerForActivitiesCheckboxes = $(
-  'fieldset.activities input[type="checkbox"]'
-);
+const activitiesFieldset = $("fieldset.activities");
+const activitiesLegend = $("fieldset.activities legend");
+const activitiesCheckboxes = $('fieldset.activities input[type="checkbox"]');
 const paymentFieldset = $("form fieldset:nth-child(4)");
 const paymentSelection = $("#payment");
 const paymentCreditCardDiv = $("#credit-card");
@@ -40,7 +38,7 @@ function resetForm() {
 
 /*
  *********************************************
- ***Job Role Input Section
+ *** Start Job Role Input Section
  *********************************************
  */
 jobRoleSelection.change(function() {
@@ -53,7 +51,13 @@ jobRoleSelection.change(function() {
 
 /*
  *********************************************
- ***T-Shirt Info Section
+ *** End Job Role Input Section
+ *********************************************
+ */
+
+/*
+ *********************************************
+ *** Start T-Shirt Info Section
  *********************************************
  */
 tShirtDesignSelection.change(function() {
@@ -93,53 +97,93 @@ function hideShirtColorSelection() {
 
 /*
  *********************************************
- ***Register for Activities Section
+ *** End T-Shirt Info Section
  *********************************************
  */
 
-registerForActivitiesFieldset.on("change", 'input[type="checkbox"]', function(
-  event
-) {
-  const changedActivityLabelText = event.target.parentNode.textContent;
-  const changedActivity = createActivityObject(changedActivityLabelText);
-  const changedActivity_isChecked = $(this).prop("checked");
+/*
+ *********************************************
+ *** Start Register for Activities Section
+ *********************************************
+ */
+
+activitiesFieldset.on("change", 'input[type="checkbox"]', function(e) {
+  const checkedElements = getCheckedElements();
+  const emptyElements = getEmptyElements();
+  const checkboxesToDisable = [];
+  const checkboxesToEnable = [];
   let totalCost = 0;
 
-  registerForActivitiesCheckboxes.each(function() {
-    const otherActivityCheckbox = $(this);
-    const otherActivityLabel = $(this).parent();
-    const otherActivityLabelText = otherActivityLabel.text();
-    const otherActivity = createActivityObject(otherActivityLabelText);
-    const otherActivity_isChecked = otherActivityCheckbox.prop("checked");
-    const labelsMatch = activityLabelsMatch(
-      otherActivityLabelText,
-      changedActivityLabelText
-    );
-    const timesOverlap = activityTimesOverlap(otherActivity, changedActivity);
+  emptyElements.forEach(function(emptyElement) {
+    const emptyActivityDetail = createActivity(emptyElement.parent().text());
+    let canBeDisabled = false;
 
-    if (!labelsMatch && timesOverlap && changedActivity_isChecked) {
-      disableActivityCheckbox(otherActivityLabel, otherActivityCheckbox);
-    } else {
-      enableActivityCheckbox(otherActivityLabel, otherActivityCheckbox);
-    }
+    checkedElements.forEach(function(checkedElement) {
+      const checkedActivityDetail = createActivity(
+        checkedElement.parent().text()
+      );
+      const okToDisable = doActivitiesOverlap(
+        emptyActivityDetail,
+        checkedActivityDetail
+      );
+      if (okToDisable) {
+        checkboxesToDisable.push(emptyElement);
+        canBeDisabled = true;
+      }
+    });
 
-    if (otherActivity_isChecked) {
-      totalCost += otherActivity.cost;
+    if (!canBeDisabled) {
+      checkboxesToEnable.push(emptyElement);
     }
   });
 
-  if (totalCost > 0) {
-    if (!isCostParagraphDisplayed) {
-      addCostInfoAddCostParagraph(totalCost);
-    } else {
-      updateCostInfo(totalCost);
-    }
-  } else {
-    removeCostInfoRemoveCostParagraph();
-  }
+  checkboxesToEnable.forEach(function(ele) {
+    enableActivity(ele, ele.parent());
+  });
+
+  checkboxesToDisable.forEach(function(ele) {
+    disableActivity(ele, ele.parent());
+  });
+
+  //   // Sum total cost for all selected activities
+  //   if (otherActivity_isChecked) {
+  //     totalCost += otherActivity.cost;
+  //   }
+  // });
+
+  // // show/updated/or hide Total Cost, pending user actions
+  // if (totalCost > 0) {
+  //   if (!isCostParagraphDisplayed) {
+  //     addCostInfoAddCostParagraph(totalCost);
+  //   } else {
+  //     updateCostInfo(totalCost);
+  //   }
+  // } else {
+  //   removeCostInfoRemoveCostParagraph();
+  // }
 });
 
-function createActivityObject(activityText) {
+function getCheckedElements() {
+  const checkedElements = [];
+  activitiesCheckboxes.each(function() {
+    if ($(this).prop("checked")) {
+      checkedElements.push($(this));
+    }
+  });
+  return checkedElements;
+}
+
+function getEmptyElements() {
+  const emptyElements = [];
+  activitiesCheckboxes.each(function() {
+    if (!$(this).prop("checked")) {
+      emptyElements.push($(this));
+    }
+  });
+  return emptyElements;
+}
+
+function createActivity(activityText) {
   const event_regex = /^(\D*)\s+?—\s+?(\r\n|\r|\n)?(Tuesday|Wednesday)?\s*?(\r\n|\r|\n)?(\d\d?)?(am|pm)?-?(\d\d?)?(am|pm)?,?\s*?\$(\d{3})$/;
 
   function replaceText(regexGroup) {
@@ -172,12 +216,7 @@ function createActivityObject(activityText) {
   return normalizeActivityTimes(conferenceActivity);
 }
 
-function activityLabelsMatch(labelA, labelB) {
-  if (labelA === labelB) {
-    return true;
-  }
-}
-function activityTimesOverlap(a, b) {
+function doActivitiesOverlap(a, b) {
   if (
     a.day === b.day &&
     ((b.start_time <= a.start_time && a.start_time <= b.end_time) ||
@@ -185,16 +224,17 @@ function activityTimesOverlap(a, b) {
   ) {
     return true;
   }
+  return false;
 }
 
-function disableActivityCheckbox(label, checkbox) {
-  label.css("color", "grey");
+function disableActivity(checkbox, label) {
   checkbox.prop("disabled", true);
+  label.css("color", "grey");
 }
 
-function enableActivityCheckbox(label, checkbox) {
-  label.css("color", "#000");
+function enableActivity(checkbox, label) {
   checkbox.prop("disabled", false);
+  label.css("color", "#000");
 }
 
 function createParagraph() {
@@ -202,12 +242,12 @@ function createParagraph() {
 }
 
 function getParagraphFromActivitiesFieldset() {
-  return registerForActivitiesFieldset.find("p");
+  return activitiesFieldset.find("p");
 }
 
 function appendParagraphToActivitiesFieldset() {
   const paragraphToAppend = createParagraph();
-  registerForActivitiesFieldset.append(paragraphToAppend);
+  activitiesFieldset.append(paragraphToAppend);
   return getParagraphFromActivitiesFieldset();
 }
 
@@ -236,7 +276,13 @@ function removeCostInfoRemoveCostParagraph() {
 
 /*
  *********************************************
- ***Payment Info Section
+ ***End Register for Activities Section
+ *********************************************
+ */
+
+/*
+ *********************************************
+ *** Start Payment Info Section
  *********************************************
  */
 paymentSelection.change(function() {
@@ -271,7 +317,13 @@ function clearFormInput(targetElement) {
 
 /*
  *********************************************
- ***Form Validators Section
+ *** End Payment Info Section
+ *********************************************
+ */
+
+/*
+ *********************************************
+ *** Start Form Validators Section
  *********************************************
  */
 function isValidName(name) {
@@ -282,9 +334,9 @@ function isValidEmail(email) {
   return /^[^@]+@[^@.]+\.[a-z]+$/i.test(email);
 }
 
-function isValidActivities(registerForActivitiesCheckboxes) {
+function isValidActivities(activitiesCheckboxes) {
   let valid = false;
-  registerForActivitiesCheckboxes.each(function() {
+  activitiesCheckboxes.each(function() {
     if (this.checked) {
       valid = true;
     }
@@ -304,12 +356,6 @@ function isValidCvv(number) {
   return /^\d{3}$/.test(number);
 }
 
-/*
-  ***********************
- Validation Styling
-  - Class styling added under "Helper Classes"
-  ***********************
-*/
 function toggleErrBorder(element, isValid) {
   isValid ? element.removeClass("err-border") : element.addClass("err-border");
 }
@@ -320,7 +366,13 @@ function toggleErrLabel(element, isValid) {
 
 /*
  *********************************************
- ***Adding Event Listeners
+ *** End Form Validators Section
+ *********************************************
+ */
+
+/*
+ *********************************************
+ *** Start Add Event Listeners
  *********************************************
  */
 
@@ -334,9 +386,9 @@ paymentZipCodeInput.on("input focusout", createHandler(isValidZip));
 
 paymentCvvInput.on("input focusout", createHandler(isValidCvv));
 
-registerForActivitiesFieldset.on("change", function() {
-  const valid = isValidActivities(registerForActivitiesCheckboxes);
-  toggleErrLabel(registerForActivitiesLegend, valid);
+activitiesFieldset.on("change", function() {
+  const valid = isValidActivities(activitiesCheckboxes);
+  toggleErrLabel(activitiesLegend, valid);
 });
 
 function createHandler(validator) {
@@ -348,11 +400,22 @@ function createHandler(validator) {
   };
 }
 
+/*
+ *********************************************
+ *** End Add Event Listeners
+ *********************************************
+ */
+
+/*
+ *********************************************
+ *** Start Form Validation
+ *********************************************
+ */
 function isFormValid() {
   if (
     !isValidName(nameInput.val()) ||
     !isValidEmail(emailInput.val()) ||
-    !isValidActivities(registerForActivitiesCheckboxes) ||
+    !isValidActivities(activitiesCheckboxes) ||
     (paymentSelection.val() === "credit card" &&
       (!isValidCreditCard(paymentCardNumberInput.val()) ||
         !isValidZip(paymentZipCodeInput.val()) ||
@@ -369,7 +432,7 @@ function triggerEventsHandlers() {
   paymentCardNumberInput.trigger("input");
   paymentZipCodeInput.trigger("input");
   paymentCvvInput.trigger("input");
-  registerForActivitiesFieldset.trigger("change");
+  activitiesFieldset.trigger("change");
 }
 
 $("form").on("submit", function(event) {
@@ -379,5 +442,11 @@ $("form").on("submit", function(event) {
     event.preventDefault();
   }
 });
+
+/*
+ *********************************************
+ *** End Form Validation
+ *********************************************
+ */
 
 resetForm();
