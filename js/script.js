@@ -22,7 +22,6 @@ const paymentBitcoinDiv = paymentFieldset.find("div").eq(5);
 const paymentCardNumberInput = $("#cc-num");
 const paymentZipCodeInput = $("#zip");
 const paymentCvvInput = $("#cvv");
-let isCostParagraphDisplayed = false;
 
 // Force Reset of Fields - Executed @ end of script
 function resetForm() {
@@ -48,12 +47,6 @@ jobRoleSelection.change(function() {
     otherJobRoleInput.hide();
   }
 });
-
-/*
- *********************************************
- *** End Job Role Input Section
- *********************************************
- */
 
 /*
  *********************************************
@@ -97,12 +90,6 @@ function hideShirtColorSelection() {
 
 /*
  *********************************************
- *** End T-Shirt Info Section
- *********************************************
- */
-
-/*
- *********************************************
  *** Start Register for Activities Section
  *********************************************
  */
@@ -122,7 +109,7 @@ activitiesFieldset.on("change", 'input[type="checkbox"]', function(e) {
       const checkedActivityDetail = createActivity(
         checkedElement.parent().text()
       );
-      const okToDisable = doActivitiesOverlap(
+      const okToDisable = activitiesOverlap(
         emptyActivityDetail,
         checkedActivityDetail
       );
@@ -145,22 +132,16 @@ activitiesFieldset.on("change", 'input[type="checkbox"]', function(e) {
     disableActivity(ele, ele.parent());
   });
 
-  //   // Sum total cost for all selected activities
-  //   if (otherActivity_isChecked) {
-  //     totalCost += otherActivity.cost;
-  //   }
-  // });
+  checkedElements.forEach(function(ele) {
+    const checkedActivityDetail = createActivity(ele.parent().text());
+    totalCost += checkedActivityDetail.cost;
+  });
 
-  // // show/updated/or hide Total Cost, pending user actions
-  // if (totalCost > 0) {
-  //   if (!isCostParagraphDisplayed) {
-  //     addCostInfoAddCostParagraph(totalCost);
-  //   } else {
-  //     updateCostInfo(totalCost);
-  //   }
-  // } else {
-  //   removeCostInfoRemoveCostParagraph();
-  // }
+  if (totalCost > 0) {
+    setFieldsetParagraphCost(totalCost);
+  } else {
+    removeFieldsetParagraph();
+  }
 });
 
 function getCheckedElements() {
@@ -183,17 +164,10 @@ function getEmptyElements() {
   return emptyElements;
 }
 
-function createActivity(activityText) {
+function createActivity(text) {
   const event_regex = /^(\D*)\s+?—\s+?(\r\n|\r|\n)?(Tuesday|Wednesday)?\s*?(\r\n|\r|\n)?(\d\d?)?(am|pm)?-?(\d\d?)?(am|pm)?,?\s*?\$(\d{3})$/;
 
-  function replaceText(regexGroup) {
-    return activityText
-      .replace(event_regex, regexGroup)
-      .trim()
-      .toLowerCase();
-  }
-
-  const conferenceActivity = {
+  const activity = {
     title: replaceText("$1"),
     day: replaceText("$3"),
     start_time: parseInt(replaceText("$5")),
@@ -203,20 +177,27 @@ function createActivity(activityText) {
     cost: parseInt(replaceText("$9"))
   };
 
-  function normalizeActivityTimes(activity) {
-    if (activity.start_time != "12" && activity.start_ampm === "pm") {
-      activity.start_time += 12;
-    }
-    if (activity.end_time != "12" && activity.end_ampm === "pm") {
-      activity.end_time += 12;
-    }
-    return activity;
+  activity.start_time = normalizeTime(activity.start_time, activity.start_ampm);
+  activity.end_time = normalizeTime(activity.end_time, activity.end_ampm);
+
+  function replaceText(regexGroup) {
+    return text
+      .replace(event_regex, regexGroup)
+      .trim()
+      .toLowerCase();
   }
 
-  return normalizeActivityTimes(conferenceActivity);
+  function normalizeTime(time, time_meridian) {
+    if (time != "12" && time_meridian === "pm") {
+      time += 12;
+    }
+    return time;
+  }
+
+  return activity;
 }
 
-function doActivitiesOverlap(a, b) {
+function activitiesOverlap(a, b) {
   if (
     a.day === b.day &&
     ((b.start_time <= a.start_time && a.start_time <= b.end_time) ||
@@ -237,48 +218,41 @@ function enableActivity(checkbox, label) {
   label.css("color", "#000");
 }
 
-function createParagraph() {
-  return $(document.createElement("p"));
+function setFieldsetParagraphCost(cost) {
+  const paragraph = appendFieldsetParagraph();
+  paragraph.text(`Total Cost: $${cost}`);
 }
 
-function getParagraphFromActivitiesFieldset() {
+function appendFieldsetParagraph() {
+  if (!fieldsetContainsParagraph()) {
+    const paragraph = createParagraph();
+    activitiesFieldset.append(paragraph);
+    return paragraph;
+  } else {
+    return getFieldsetParagraph();
+  }
+}
+
+function removeFieldsetParagraph() {
+  if (fieldsetContainsParagraph()) {
+    getFieldsetParagraph().remove();
+  }
+}
+
+function fieldsetContainsParagraph() {
+  if (getFieldsetParagraph().length === 0) {
+    return false;
+  }
+  return true;
+}
+
+function getFieldsetParagraph() {
   return activitiesFieldset.find("p");
 }
 
-function appendParagraphToActivitiesFieldset() {
-  const paragraphToAppend = createParagraph();
-  activitiesFieldset.append(paragraphToAppend);
-  return getParagraphFromActivitiesFieldset();
+function createParagraph() {
+  return $(document.createElement("p"));
 }
-
-function removeParagraphFromActivitiesFieldset() {
-  const paragraph = getParagraphFromActivitiesFieldset();
-  paragraph.remove();
-}
-
-function addCostInfoAddCostParagraph(cost) {
-  const costInfo = `Total Cost: $${cost}`;
-  const costParagraph = appendParagraphToActivitiesFieldset();
-  costParagraph.text(costInfo);
-  isCostParagraphDisplayed = true;
-}
-
-function updateCostInfo(cost) {
-  const costInfo = `Total Cost: $${cost}`;
-  const costParagraph = getParagraphFromActivitiesFieldset();
-  costParagraph.text(costInfo);
-}
-
-function removeCostInfoRemoveCostParagraph() {
-  removeParagraphFromActivitiesFieldset();
-  isCostParagraphDisplayed = false;
-}
-
-/*
- *********************************************
- ***End Register for Activities Section
- *********************************************
- */
 
 /*
  *********************************************
@@ -314,12 +288,6 @@ function clearFormInput(targetElement) {
   toggleErrBorder(targetElement, true);
   toggleErrLabel(targetElement.prev(), true);
 }
-
-/*
- *********************************************
- *** End Payment Info Section
- *********************************************
- */
 
 /*
  *********************************************
@@ -366,12 +334,6 @@ function toggleErrLabel(element, isValid) {
 
 /*
  *********************************************
- *** End Form Validators Section
- *********************************************
- */
-
-/*
- *********************************************
  *** Start Add Event Listeners
  *********************************************
  */
@@ -399,12 +361,6 @@ function createHandler(validator) {
     toggleErrLabel($(this).prev(), valid);
   };
 }
-
-/*
- *********************************************
- *** End Add Event Listeners
- *********************************************
- */
 
 /*
  *********************************************
@@ -442,11 +398,5 @@ $("form").on("submit", function(event) {
     event.preventDefault();
   }
 });
-
-/*
- *********************************************
- *** End Form Validation
- *********************************************
- */
 
 resetForm();
