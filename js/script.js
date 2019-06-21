@@ -1,8 +1,16 @@
 /*
     Adding Form Validation and Interactivity with Javascript/jQuery to index.html
-    Developer: Samuel Piedra
+    Author: Samuel Piedra
     Date Started: 05/26/2019
-    Last Modiefied: 06/16/2019
+    Last Modiefied: 06/20/2019
+
+    The code below adds validation and interactivity to the various inputs throughout
+    the form. The code provides real-time notifications (through color changes) on the validity of
+    input as the user is entering data.  
+
+    If the user attempts to submit the form without inputting valid data into the available fields
+    the user is notified with each invalid input element changing color and background color (where applicable).
+    Once the user successfully enters valid data into each available input field, the form may be submitted.
 */
 // Get Form Elements -- Global Variables
 const nameInput = $("#name");
@@ -30,6 +38,7 @@ function resetForm() {
   jobRoleSelection.val("full-stack js developer");
   tShirtDesignSelection.val("default");
   hideShirtColorSelection();
+  paymentSelection.val("credit card");
   paymentPaypalDiv.hide();
   paymentBitcoinDiv.hide();
   paymentCreditCardDiv.show();
@@ -225,7 +234,7 @@ function setFieldsetParagraphCost(cost) {
 
 function appendFieldsetParagraph() {
   if (!fieldsetContainsParagraph()) {
-    const paragraph = createParagraph();
+    const paragraph = $(document.createElement("p"));
     activitiesFieldset.append(paragraph);
     return paragraph;
   } else {
@@ -248,10 +257,6 @@ function fieldsetContainsParagraph() {
 
 function getFieldsetParagraph() {
   return activitiesFieldset.find("p");
-}
-
-function createParagraph() {
-  return $(document.createElement("p"));
 }
 
 /*
@@ -392,10 +397,10 @@ function triggerEventsHandlers() {
 }
 
 $("form").on("submit", function(event) {
-  const validationSuccess = isFormValid();
-  triggerEventsHandlers();
-  if (!validationSuccess) {
+  const okToSubmitForm = isFormValid();
+  if (!okToSubmitForm) {
     event.preventDefault();
+    triggerEventsHandlers();
   }
 });
 
