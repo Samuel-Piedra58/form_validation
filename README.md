@@ -20,7 +20,9 @@ Form validation criteria:
     
    (4) Payment Info: This form validation is only applicable if the user selects the "Credit Card" option from the "I'm going to pay with:" select drop down. The user must enter a valid card number 13-16 digits in length, a valid zip code 5 digits in length and a valid cvv 3 digits in length. If the user fails to enter data correctly into any of these input elements the user is notified by the each input element recieving a red-border with a red background color along with the input label turning red.
 
+
 Additional Form Interactivity:
+   
    (1) Job Role: The user will be able to select a job role from the "Job Role" select drop down. If the user selects "Other" an input element will appear below the drop down for the user to enter their "Other" job role.
     
    (2) T-Shirt Info: The user will be able to select one of two availble t-shirt designs, whereby once a design is selected a color dropdown will display right of the t-shirt design selection. The availble color options are filtered dependent on the user's t-shirt design selection.
