@@ -46,6 +46,7 @@ legend,
 button {
   padding: 0;
   border: none;
+  position: relative;
 }
 
 fieldset {
@@ -149,6 +150,10 @@ button:hover {
   clear: both;
 }
 
+/* ================================= 
+  Error Classes
+==================================== */
+
 .err-border {
   border: solid red 2px;
   background-color: #ffb6c1;
@@ -157,6 +162,48 @@ button:hover {
 .err-label {
   color: red;
   font-weight: 600;
+}
+
+.name-error {
+  top: 10%;
+  left: 102%;
+}
+
+.email-error {
+  top: 47%;
+  left: 102%;
+}
+
+.error-msg {
+  font-weight: 100;
+  text-align: center;
+  background-color: #dcdcdc;
+  border: 2px solid #5e97b0;
+  padding: 2px;
+  position: absolute;
+  width: 140px;
+  height: 47px;
+  border-radius: 5px;
+  -webkit-filter: drop-shadow(0 3px 3px #5e97b0);
+}
+
+.error-msg:after {
+  bottom: 25%;
+  left: -12px;
+  border: solid transparent;
+  content: " ";
+  height: 0;
+  width: 0;
+  position: absolute;
+  pointer-events: none;
+}
+
+.error-msg:after {
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-right: 10px solid #22627e;
 }
 
 /* ================================= 

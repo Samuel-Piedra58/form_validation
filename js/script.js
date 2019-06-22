@@ -13,47 +13,47 @@
     Once the user successfully enters valid data into each available input field, the form may be submitted.
 */
 // Get Form Elements -- Global Variables
-const nameInput = $("#name");
-const emailInput = $("#mail");
-const jobRoleSelection = $("#title");
-const otherJobRoleInput = $("#other-title");
-const tShirtDesignSelection = $("#design");
-const tShirtColorSelection = $("#color");
-const activitiesFieldset = $("fieldset.activities");
-const activitiesLegend = $("fieldset.activities legend");
-const activitiesCheckboxes = $('fieldset.activities input[type="checkbox"]');
-const paymentFieldset = $("form fieldset:nth-child(4)");
-const paymentSelection = $("#payment");
-const paymentCreditCardDiv = $("#credit-card");
-const paymentPaypalDiv = paymentFieldset.find("div").eq(4);
-const paymentBitcoinDiv = paymentFieldset.find("div").eq(5);
-const paymentCardNumberInput = $("#cc-num");
-const paymentZipCodeInput = $("#zip");
-const paymentCvvInput = $("#cvv");
+const $nameInput = $("#name");
+const $emailInput = $("#mail");
+const $jobRoleSelection = $("#title");
+const $otherJobRoleInput = $("#other-title");
+const $tShirtDesignSelection = $("#design");
+const $tShirtColorSelection = $("#color");
+const $activitiesFieldset = $("fieldset.activities");
+const $activitiesCheckboxes = $('fieldset.activities input[type="checkbox"]');
+const $paymentFieldset = $("form fieldset:nth-child(4)");
+const $paymentSelection = $("#payment");
+const $paymentCreditCardDiv = $("#credit-card");
+const $paymentPaypalDiv = $paymentFieldset.find("div").eq(4);
+const $paymentBitcoinDiv = $paymentFieldset.find("div").eq(5);
+const $paymentCardNumberInput = $("#cc-num");
+const $paymentZipCodeInput = $("#zip");
+const $paymentCvvInput = $("#cvv");
 
-// Force Reset of Fields - Executed @ end of script
-function resetForm() {
-  nameInput.focus();
-  otherJobRoleInput.hide();
-  jobRoleSelection.val("full-stack js developer");
-  tShirtDesignSelection.val("default");
-  hideShirtColorSelection();
-  paymentSelection.val("credit card");
-  paymentPaypalDiv.hide();
-  paymentBitcoinDiv.hide();
-  paymentCreditCardDiv.show();
-}
+// Force Reset of Fields - IIFE
+(function() {
+  $nameInput.focus();
+  $otherJobRoleInput.hide();
+  $jobRoleSelection.val("full-stack js developer");
+  $tShirtDesignSelection.val("default");
+  $tShirtColorSelection.hide();
+  $tShirtColorSelection.prev().text("Please select a T-shirt theme");
+  $paymentSelection.val("credit card");
+  $paymentPaypalDiv.hide();
+  $paymentBitcoinDiv.hide();
+  $paymentCreditCardDiv.show();
+})();
 
 /*
  *********************************************
  *** Start Job Role Input Section
  *********************************************
  */
-jobRoleSelection.change(function() {
+$jobRoleSelection.change(function() {
   if ($(this).val() === "other") {
-    otherJobRoleInput.show();
+    $otherJobRoleInput.show();
   } else {
-    otherJobRoleInput.hide();
+    $otherJobRoleInput.hide();
   }
 });
 
@@ -62,17 +62,18 @@ jobRoleSelection.change(function() {
  *** Start T-Shirt Info Section
  *********************************************
  */
-tShirtDesignSelection.change(function() {
+$tShirtDesignSelection.change(function() {
   $("#color option").each(function() {
     filterColorOption($(this));
   });
   setDefaultShirtColorOption();
-  showShirtColorSelection();
+  $tShirtColorSelection.show();
+  $tShirtColorSelection.prev().text("Color:");
 });
 
 function filterColorOption(color) {
   const regex = /JS Puns shirt only/;
-  if (tShirtDesignSelection.val() === "js puns") {
+  if ($tShirtDesignSelection.val() === "js puns") {
     regex.test(color.text()) ? color.show() : color.hide();
   } else {
     regex.test(color.text()) ? color.hide() : color.show();
@@ -80,21 +81,11 @@ function filterColorOption(color) {
 }
 
 function setDefaultShirtColorOption() {
-  if (tShirtDesignSelection.val() === "js puns") {
-    tShirtColorSelection.val("cornflowerblue");
+  if ($tShirtDesignSelection.val() === "js puns") {
+    $tShirtColorSelection.val("cornflowerblue");
   } else {
-    tShirtColorSelection.val("tomato");
+    $tShirtColorSelection.val("tomato");
   }
-}
-
-function showShirtColorSelection() {
-  tShirtColorSelection.show();
-  tShirtColorSelection.prev().text("Color:");
-}
-
-function hideShirtColorSelection() {
-  tShirtColorSelection.hide();
-  tShirtColorSelection.prev().text("Please select a T-shirt theme");
 }
 
 /*
@@ -103,46 +94,46 @@ function hideShirtColorSelection() {
  *********************************************
  */
 
-activitiesFieldset.on("change", 'input[type="checkbox"]', function(e) {
+$activitiesFieldset.on("change", 'input[type="checkbox"]', function(e) {
   const checkedElements = getCheckedElements();
   const emptyElements = getEmptyElements();
   const checkboxesToDisable = [];
   const checkboxesToEnable = [];
   let totalCost = 0;
 
-  emptyElements.forEach(function(emptyElement) {
-    const emptyActivityDetail = createActivity(emptyElement.parent().text());
+  emptyElements.forEach(function($emptyElement) {
+    const emptyActivityDetail = createActivity($emptyElement.parent().text());
     let canBeDisabled = false;
 
-    checkedElements.forEach(function(checkedElement) {
+    checkedElements.forEach(function($checkedElement) {
       const checkedActivityDetail = createActivity(
-        checkedElement.parent().text()
+        $checkedElement.parent().text()
       );
       const okToDisable = activitiesOverlap(
         emptyActivityDetail,
         checkedActivityDetail
       );
       if (okToDisable) {
-        checkboxesToDisable.push(emptyElement);
+        checkboxesToDisable.push($emptyElement);
         canBeDisabled = true;
       }
     });
 
     if (!canBeDisabled) {
-      checkboxesToEnable.push(emptyElement);
+      checkboxesToEnable.push($emptyElement);
     }
   });
 
-  checkboxesToEnable.forEach(function(ele) {
-    enableActivity(ele, ele.parent());
+  checkboxesToEnable.forEach(function($ele) {
+    enableActivity($ele, $ele.parent());
   });
 
-  checkboxesToDisable.forEach(function(ele) {
-    disableActivity(ele, ele.parent());
+  checkboxesToDisable.forEach(function($ele) {
+    disableActivity($ele, $ele.parent());
   });
 
-  checkedElements.forEach(function(ele) {
-    const checkedActivityDetail = createActivity(ele.parent().text());
+  checkedElements.forEach(function($ele) {
+    const checkedActivityDetail = createActivity($ele.parent().text());
     totalCost += checkedActivityDetail.cost;
   });
 
@@ -155,7 +146,7 @@ activitiesFieldset.on("change", 'input[type="checkbox"]', function(e) {
 
 function getCheckedElements() {
   const checkedElements = [];
-  activitiesCheckboxes.each(function() {
+  $activitiesCheckboxes.each(function() {
     if ($(this).prop("checked")) {
       checkedElements.push($(this));
     }
@@ -165,7 +156,7 @@ function getCheckedElements() {
 
 function getEmptyElements() {
   const emptyElements = [];
-  activitiesCheckboxes.each(function() {
+  $activitiesCheckboxes.each(function() {
     if (!$(this).prop("checked")) {
       emptyElements.push($(this));
     }
@@ -186,8 +177,8 @@ function createActivity(text) {
     cost: parseInt(replaceText("$9"))
   };
 
-  activity.start_time = normalizeTime(activity.start_time, activity.start_ampm);
-  activity.end_time = normalizeTime(activity.end_time, activity.end_ampm);
+  activity.start_time = standardTime(activity.start_time, activity.start_ampm);
+  activity.end_time = standardTime(activity.end_time, activity.end_ampm);
 
   function replaceText(regexGroup) {
     return text
@@ -196,7 +187,7 @@ function createActivity(text) {
       .toLowerCase();
   }
 
-  function normalizeTime(time, time_meridian) {
+  function standardTime(time, time_meridian) {
     if (time != "12" && time_meridian === "pm") {
       time += 12;
     }
@@ -217,26 +208,26 @@ function activitiesOverlap(a, b) {
   return false;
 }
 
-function disableActivity(checkbox, label) {
-  checkbox.prop("disabled", true);
-  label.css("color", "grey");
+function disableActivity($checkbox, $label) {
+  $checkbox.prop("disabled", true);
+  $label.css("color", "grey");
 }
 
-function enableActivity(checkbox, label) {
-  checkbox.prop("disabled", false);
-  label.css("color", "#000");
+function enableActivity($checkbox, $label) {
+  $checkbox.prop("disabled", false);
+  $label.css("color", "#000");
 }
 
 function setFieldsetParagraphCost(cost) {
-  const paragraph = appendFieldsetParagraph();
-  paragraph.text(`Total Cost: $${cost}`);
+  const $paragraph = appendFieldsetParagraph();
+  $paragraph.text(`Total Cost: $${cost}`);
 }
 
 function appendFieldsetParagraph() {
   if (!fieldsetContainsParagraph()) {
-    const paragraph = $(document.createElement("p"));
-    activitiesFieldset.append(paragraph);
-    return paragraph;
+    const $paragraph = $(document.createElement("p"));
+    $activitiesFieldset.append($paragraph);
+    return $paragraph;
   } else {
     return getFieldsetParagraph();
   }
@@ -256,7 +247,7 @@ function fieldsetContainsParagraph() {
 }
 
 function getFieldsetParagraph() {
-  return activitiesFieldset.find("p");
+  return $activitiesFieldset.find("p");
 }
 
 /*
@@ -264,34 +255,34 @@ function getFieldsetParagraph() {
  *** Start Payment Info Section
  *********************************************
  */
-paymentSelection.change(function() {
-  const payChoice = $(this).val();
-  if (payChoice === "credit card") {
-    togglePayment(paymentCreditCardDiv, paymentPaypalDiv, paymentBitcoinDiv);
-  } else if (payChoice === "paypal") {
-    togglePayment(paymentPaypalDiv, paymentCreditCardDiv, paymentBitcoinDiv);
+$paymentSelection.change(function() {
+  const $payChoice = $(this).val();
+  if ($payChoice === "credit card") {
+    togglePayment($paymentCreditCardDiv, $paymentPaypalDiv, $paymentBitcoinDiv);
+  } else if ($payChoice === "paypal") {
+    togglePayment($paymentPaypalDiv, $paymentCreditCardDiv, $paymentBitcoinDiv);
     clearCreditCardData();
   } else {
-    togglePayment(paymentBitcoinDiv, paymentCreditCardDiv, paymentPaypalDiv);
+    togglePayment($paymentBitcoinDiv, $paymentCreditCardDiv, $paymentPaypalDiv);
     clearCreditCardData();
   }
 });
 
-function togglePayment(sPayment, hPayment1, hPayment2) {
-  sPayment.show();
-  hPayment1.hide();
-  hPayment2.hide();
+function togglePayment($sPayment, $hPayment1, $hPayment2) {
+  $sPayment.show();
+  $hPayment1.hide();
+  $hPayment2.hide();
 }
 
 function clearCreditCardData() {
-  clearFormInput(paymentCardNumberInput);
-  clearFormInput(paymentZipCodeInput);
-  clearFormInput(paymentCvvInput);
+  clearFormInput($paymentCardNumberInput);
+  clearFormInput($paymentZipCodeInput);
+  clearFormInput($paymentCvvInput);
 }
-function clearFormInput(targetElement) {
-  targetElement.val("");
-  toggleErrBorder(targetElement, true);
-  toggleErrLabel(targetElement.prev(), true);
+function clearFormInput($targetElement) {
+  $targetElement.val("");
+  toggleErrBorder($targetElement, true);
+  toggleErrLabel($targetElement.prev(), true);
 }
 
 /*
@@ -307,9 +298,9 @@ function isValidEmail(email) {
   return /^[^@]+@[^@.]+\.[a-z]+$/i.test(email);
 }
 
-function isValidActivities(activitiesCheckboxes) {
+function isValidActivities($activitiesCheckboxes) {
   let valid = false;
-  activitiesCheckboxes.each(function() {
+  $activitiesCheckboxes.each(function() {
     if (this.checked) {
       valid = true;
     }
@@ -329,12 +320,30 @@ function isValidCvv(number) {
   return /^\d{3}$/.test(number);
 }
 
-function toggleErrBorder(element, isValid) {
-  isValid ? element.removeClass("err-border") : element.addClass("err-border");
+function toggleErrBorder($element, isValid) {
+  isValid
+    ? $element.removeClass("err-border")
+    : $element.addClass("err-border");
 }
 
-function toggleErrLabel(element, isValid) {
-  isValid ? element.removeClass("err-label") : element.addClass("err-label");
+function toggleErrLabel($element, isValid) {
+  isValid ? $element.removeClass("err-label") : $element.addClass("err-label");
+}
+
+function toggleErrorMsg($element, isValid, section) {
+  const $nextElement = $element.next();
+  if (isValid) {
+    if ($nextElement.prop("tagName") === "DIV") {
+      $nextElement.remove();
+    }
+  } else {
+    if ($nextElement.prop("tagName") !== "DIV") {
+      const $errorDiv = $(document.createElement("div"));
+      $errorDiv.addClass(`error-msg ${section}-error`);
+      $errorDiv.text(`Please enter a valid ${section}`);
+      $element.after($errorDiv);
+    }
+  }
 }
 
 /*
@@ -343,25 +352,41 @@ function toggleErrLabel(element, isValid) {
  *********************************************
  */
 
-nameInput.on("input focusout", createHandler(isValidName));
+$nameInput.on("input focusout", function() {
+  const $text = $(this).val();
+  const isValid = isValidName($text);
+  toggleErrBorder($(this), isValid);
+  toggleErrLabel($(this).prev(), isValid);
+  toggleErrorMsg($(this), isValid, "name");
+});
 
-emailInput.on("input focusout", createHandler(isValidEmail));
+$emailInput.on("input focusout", function() {
+  const $text = $(this).val();
+  const isValid = isValidEmail($text);
+  toggleErrBorder($(this), isValid);
+  toggleErrLabel($(this).prev(), isValid);
+  toggleErrorMsg($(this), isValid, "email");
+});
 
-paymentCardNumberInput.on("input focusout", createHandler(isValidCreditCard));
+// $nameInput.on("input focusout", createHandler(isValidEmail));
 
-paymentZipCodeInput.on("input focusout", createHandler(isValidZip));
+// $emailInput.on("input focusout", createHandler(isValidEmail));
 
-paymentCvvInput.on("input focusout", createHandler(isValidCvv));
+$paymentCardNumberInput.on("input focusout", createHandler(isValidCreditCard));
 
-activitiesFieldset.on("change", function() {
-  const valid = isValidActivities(activitiesCheckboxes);
-  toggleErrLabel(activitiesLegend, valid);
+$paymentZipCodeInput.on("input focusout", createHandler(isValidZip));
+
+$paymentCvvInput.on("input focusout", createHandler(isValidCvv));
+
+$activitiesFieldset.on("change", function() {
+  const valid = isValidActivities($activitiesCheckboxes);
+  toggleErrLabel($("fieldset.activities legend"), valid);
 });
 
 function createHandler(validator) {
   return function() {
-    const text = $(this).val();
-    const valid = validator(text);
+    const $text = $(this).val();
+    const valid = validator($text);
     toggleErrBorder($(this), valid);
     toggleErrLabel($(this).prev(), valid);
   };
@@ -374,13 +399,13 @@ function createHandler(validator) {
  */
 function isFormValid() {
   if (
-    !isValidName(nameInput.val()) ||
-    !isValidEmail(emailInput.val()) ||
-    !isValidActivities(activitiesCheckboxes) ||
-    (paymentSelection.val() === "credit card" &&
-      (!isValidCreditCard(paymentCardNumberInput.val()) ||
-        !isValidZip(paymentZipCodeInput.val()) ||
-        !isValidCvv(paymentCvvInput.val())))
+    !isValidName($nameInput.val()) ||
+    !isValidEmail($emailInput.val()) ||
+    !isValidActivities($activitiesCheckboxes) ||
+    ($paymentSelection.val() === "credit card" &&
+      (!isValidCreditCard($paymentCardNumberInput.val()) ||
+        !isValidZip($paymentZipCodeInput.val()) ||
+        !isValidCvv($paymentCvvInput.val())))
   ) {
     return false;
   }
@@ -388,12 +413,12 @@ function isFormValid() {
 }
 
 function triggerEventsHandlers() {
-  nameInput.trigger("input");
-  emailInput.trigger("input");
-  paymentCardNumberInput.trigger("input");
-  paymentZipCodeInput.trigger("input");
-  paymentCvvInput.trigger("input");
-  activitiesFieldset.trigger("change");
+  $nameInput.trigger("input");
+  $emailInput.trigger("input");
+  $paymentCardNumberInput.trigger("input");
+  $paymentZipCodeInput.trigger("input");
+  $paymentCvvInput.trigger("input");
+  $activitiesFieldset.trigger("change");
 }
 
 $("form").on("submit", function(event) {
@@ -403,5 +428,3 @@ $("form").on("submit", function(event) {
     triggerEventsHandlers();
   }
 });
-
-resetForm();
