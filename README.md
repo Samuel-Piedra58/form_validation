@@ -7,8 +7,7 @@ the form found in index.html. The code provides real-time notifications (through
 input as the user is entering data.
 
 If the user attempts to submit the form without inputting valid data into the available fields
-the user is notified with each invalid input element changing color and background color (where applicable).
-Once the user successfully enters valid data into each available input field, the form may be submitted.
+the user is notified with each invalid input element changing color and background color (where applicable).Also, for any invalid input submission the user is notified with an error message box detailing the issue. Once the user successfully enters valid data into each available input field, the form may be submitted.
 
 Form validation criteria:
     
