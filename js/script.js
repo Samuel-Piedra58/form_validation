@@ -2,16 +2,19 @@
     Adding Form Validation and Interactivity with Javascript/jQuery to index.html
     Author: Samuel Piedra
     Date Started: 05/26/2019
-    Last Modiefied: 06/20/2019
+    Last Modiefied: 06/25/2019
+    github: https://github.com/Samuel-Piedra58
 
     The code below adds validation and interactivity to the various inputs throughout
-    the form. The code provides real-time notifications (through color changes) on the validity of
-    input as the user is entering data.  
+    the form (index.html). The code provides real-time notifications (through color changes) on the validity of several inputs.
+
 
     If the user attempts to submit the form without inputting valid data into the available fields
     the user is notified with each invalid input element changing color and background color (where applicable).
+    Also, for any invalid input submission the user is notified with an error message box detailing the issue. 
     Once the user successfully enters valid data into each available input field, the form may be submitted.
 */
+
 // Get Form Elements -- Global Variables
 const $nameInput = $("#name");
 const $emailInput = $("#mail");
@@ -20,6 +23,7 @@ const $otherJobRoleInput = $("#other-title");
 const $tShirtDesignSelection = $("#design");
 const $tShirtColorSelection = $("#color");
 const $activitiesFieldset = $("fieldset.activities");
+const $activitiesLegend = $("fieldset.activities legend");
 const $activitiesCheckboxes = $('fieldset.activities input[type="checkbox"]');
 const $paymentFieldset = $("form fieldset:nth-child(4)");
 const $paymentSelection = $("#payment");
@@ -224,8 +228,9 @@ function setFieldsetParagraphCost(cost) {
 }
 
 function appendFieldsetParagraph() {
-  if (!fieldsetContainsParagraph()) {
+  if (!doesExist(getFieldsetParagraph())) {
     const $paragraph = $(document.createElement("p"));
+    $paragraph.addClass("cost");
     $activitiesFieldset.append($paragraph);
     return $paragraph;
   } else {
@@ -234,22 +239,14 @@ function appendFieldsetParagraph() {
 }
 
 function removeFieldsetParagraph() {
-  if (fieldsetContainsParagraph()) {
+  if (doesExist(getFieldsetParagraph())) {
     getFieldsetParagraph().remove();
   }
-}
-
-function fieldsetContainsParagraph() {
-  if (getFieldsetParagraph().length === 0) {
-    return false;
-  }
-  return true;
 }
 
 function getFieldsetParagraph() {
   return $activitiesFieldset.find("p");
 }
-
 /*
  *********************************************
  *** Start Payment Info Section
@@ -278,10 +275,13 @@ function clearCreditCardData() {
   clearFormInput($paymentCardNumberInput);
   clearFormInput($paymentZipCodeInput);
   clearFormInput($paymentCvvInput);
+  removeErrorMessage("card");
+  removeErrorMessage("zip");
+  removeErrorMessage("cvv");
 }
 function clearFormInput($targetElement) {
   $targetElement.val("");
-  toggleErrBorder($targetElement, true);
+  toggleErrInput($targetElement, true);
   toggleErrLabel($targetElement.prev(), true);
 }
 
@@ -320,29 +320,65 @@ function isValidCvv(number) {
   return /^\d{3}$/.test(number);
 }
 
-function toggleErrBorder($element, isValid) {
-  isValid
-    ? $element.removeClass("err-border")
-    : $element.addClass("err-border");
+function toggleErrInput($element, isValid) {
+  if (isValid) {
+    $element.removeClass("err-border");
+    $element.prev().removeClass("err-label");
+  } else {
+    $element.addClass("err-border");
+    $element.prev().addClass("err-label");
+  }
 }
 
 function toggleErrLabel($element, isValid) {
-  isValid ? $element.removeClass("err-label") : $element.addClass("err-label");
+  if (isValid) {
+    $element.removeClass("err-label");
+  } else {
+    $element.addClass("err-label");
+  }
 }
 
-function toggleErrorMsg($element, isValid, section) {
-  const $nextElement = $element.next();
-  if (isValid) {
-    if ($nextElement.prop("tagName") === "DIV") {
-      $nextElement.remove();
+function removeErrorMessage(targetClass) {
+  const $msgBox = $(`#err-${targetClass}`);
+  const msgBoxExists = doesExist($msgBox);
+  if (msgBoxExists) {
+    $msgBox.remove();
+  }
+}
+
+function toggleMessage($input, valid, targetClass, positionClass, message) {
+  const $msgBox = $(`#err-${targetClass}`);
+  const msgBoxExists = doesExist($msgBox);
+  const coords = getInputElementCoordinates();
+  if (valid && msgBoxExists) {
+    changeMessageSuccessThenRemove();
+  } else if (!valid && !msgBoxExists) {
+    createErrorMessage();
+  }
+
+  function getInputElementCoordinates() {
+    if (positionClass === "left") {
+      return getCoordinatesForLeftErrorMsg($input);
+    } else {
+      return getCoordinatesForBottomErrorMsg($input);
     }
-  } else {
-    if ($nextElement.prop("tagName") !== "DIV") {
-      const $errorDiv = $(document.createElement("div"));
-      $errorDiv.addClass(`error-msg ${section}-error`);
-      $errorDiv.text(`Please enter a valid ${section}`);
-      $element.after($errorDiv);
-    }
+  }
+
+  function changeMessageSuccessThenRemove() {
+    $msgBox.removeClass("error");
+    $msgBox.addClass("success");
+    $msgBox.fadeOut(200, function() {
+      $msgBox.remove();
+    });
+  }
+
+  function createErrorMessage() {
+    const $msgBox = $(document.createElement("div"));
+    $msgBox.addClass(`${positionClass} error msg-box`);
+    $msgBox.attr("id", `err-${targetClass}`);
+    $msgBox.text(message);
+    setCoordinatesForErrorMsg($msgBox, coords);
+    $(document.body).prepend($msgBox);
   }
 }
 
@@ -352,43 +388,65 @@ function toggleErrorMsg($element, isValid, section) {
  *********************************************
  */
 
-$nameInput.on("input focusout", function() {
-  const $text = $(this).val();
-  const isValid = isValidName($text);
-  toggleErrBorder($(this), isValid);
-  toggleErrLabel($(this).prev(), isValid);
-  toggleErrorMsg($(this), isValid, "name");
-});
-
-$emailInput.on("input focusout", function() {
-  const $text = $(this).val();
-  const isValid = isValidEmail($text);
-  toggleErrBorder($(this), isValid);
-  toggleErrLabel($(this).prev(), isValid);
-  toggleErrorMsg($(this), isValid, "email");
-});
-
-// $nameInput.on("input focusout", createHandler(isValidEmail));
-
-// $emailInput.on("input focusout", createHandler(isValidEmail));
-
-$paymentCardNumberInput.on("input focusout", createHandler(isValidCreditCard));
-
-$paymentZipCodeInput.on("input focusout", createHandler(isValidZip));
-
-$paymentCvvInput.on("input focusout", createHandler(isValidCvv));
-
 $activitiesFieldset.on("change", function() {
-  const valid = isValidActivities($activitiesCheckboxes);
-  toggleErrLabel($("fieldset.activities legend"), valid);
+  const isValid = isValidActivities($activitiesCheckboxes);
+  toggleErrLabel($activitiesLegend, isValid);
+  toggleMessage(
+    $activitiesLegend,
+    isValid,
+    "activity",
+    "left",
+    "Please select at least one activity"
+  );
 });
 
-function createHandler(validator) {
+$nameInput.on(
+  "input focusout",
+  createHandler(isValidName, "name", "left", "Please enter a valid name")
+);
+
+$emailInput.on(
+  "input focusout",
+  createHandler(
+    isValidEmail,
+    "email",
+    "left",
+    "Please enter a valid email address"
+  )
+);
+
+$paymentCardNumberInput.on(
+  "input focusout",
+  createHandler(
+    isValidCreditCard,
+    "card",
+    "left",
+    "Please enter a card number 13 to 16 digits in length"
+  )
+);
+
+$paymentZipCodeInput.on(
+  "input focusout",
+  createHandler(
+    isValidZip,
+    "zip",
+    "bottom",
+    "Please enter a valid 5-digit zip code"
+  )
+);
+
+$paymentCvvInput.on(
+  "input focusout",
+  createHandler(isValidCvv, "cvv", "bottom", "Please enter a valid 3-digit cvv")
+);
+
+function createHandler(validator, target, position, message) {
   return function() {
     const $text = $(this).val();
-    const valid = validator($text);
-    toggleErrBorder($(this), valid);
-    toggleErrLabel($(this).prev(), valid);
+    const isValid = validator($text);
+    toggleErrInput($(this), isValid);
+    toggleErrLabel($(this).prev(), isValid);
+    toggleMessage($(this), isValid, target, position, message);
   };
 }
 
@@ -397,6 +455,15 @@ function createHandler(validator) {
  *** Start Form Validation
  *********************************************
  */
+
+$("form").on("submit", function(event) {
+  const okToSubmitForm = isFormValid();
+  if (!okToSubmitForm) {
+    event.preventDefault();
+    triggerEventsHandlers();
+  }
+});
+
 function isFormValid() {
   if (
     !isValidName($nameInput.val()) ||
@@ -421,10 +488,59 @@ function triggerEventsHandlers() {
   $activitiesFieldset.trigger("change");
 }
 
-$("form").on("submit", function(event) {
-  const okToSubmitForm = isFormValid();
-  if (!okToSubmitForm) {
-    event.preventDefault();
-    triggerEventsHandlers();
-  }
+/*
+ *********************************************
+ *** Start Resize Operations for Error Messages
+ *********************************************
+ */
+
+$(window).resize(function() {
+  adjustLeftErrorMsgCoords($nameInput, $("#err-name"));
+  adjustLeftErrorMsgCoords($emailInput, $("#err-email"));
+  adjustLeftErrorMsgCoords($activitiesLegend, $("#err-activity"));
+  adjustLeftErrorMsgCoords($paymentCardNumberInput, $("#err-card"));
+  adjustBottomErrorMsgCoords($paymentZipCodeInput, $("#err-zip"));
+  adjustBottomErrorMsgCoords($paymentCvvInput, $("#err-cvv"));
 });
+
+function adjustLeftErrorMsgCoords($staticEl, $targetEl) {
+  if (!doesExist($targetEl)) return;
+  const coords = getCoordinatesForLeftErrorMsg($staticEl);
+  setCoordinatesForErrorMsg($targetEl, coords);
+}
+
+function adjustBottomErrorMsgCoords($staticEl, $targetEl) {
+  if (!doesExist($targetEl)) return;
+  const coords = getCoordinatesForBottomErrorMsg($staticEl);
+  setCoordinatesForErrorMsg($targetEl, coords);
+}
+
+function getCoordinatesForLeftErrorMsg($inputEl) {
+  const staticEl = $inputEl[0];
+  return {
+    top: staticEl.getBoundingClientRect().top + window.pageYOffset,
+    left: staticEl.getBoundingClientRect().left + window.pageXOffset - 155
+  };
+}
+
+function getCoordinatesForBottomErrorMsg($inputEl) {
+  const staticEl = $inputEl[0];
+  return {
+    top: staticEl.getBoundingClientRect().top + window.pageYOffset + 55,
+    left: staticEl.getBoundingClientRect().left + window.pageXOffset
+  };
+}
+
+function setCoordinatesForErrorMsg($inputEl, coords) {
+  const el = $inputEl[0];
+  el.style.position = "absolute";
+  el.style.top = coords.top + "px";
+  el.style.left = coords.left + "px";
+}
+
+function doesExist($ele) {
+  if ($ele.length > 0) {
+    return true;
+  }
+  return false;
+}
