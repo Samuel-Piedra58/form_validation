@@ -9,7 +9,7 @@ input as the user is entering data.
 If the user attempts to submit the form without inputting valid data into the available fields
 the user is notified with each invalid input element changing color and background color (where applicable).Also, for any invalid input submission the user is notified with an error message box detailing the issue. Once the user successfully enters valid data into each available input field, the form may be submitted.
 
-Form validation criteria:
+## Form validation criteria:
     
    (1) Name: The user must input a string at least one character long. If the user fails to enter a single character string the user is notified by the input element recieving a red-border with a red background color along with the input label turning red.
     
@@ -20,7 +20,7 @@ Form validation criteria:
    (4) Payment Info: This form validation is only applicable if the user selects the "Credit Card" option from the "I'm going to pay with:" select drop down. The user must enter a valid card number 13-16 digits in length, a valid zip code 5 digits in length and a valid cvv 3 digits in length. If the user fails to enter data correctly into any of these input elements the user is notified by the each input element recieving a red-border with a red background color along with the input label turning red.
 
 
-Additional Form Interactivity:
+## Additional Form Interactivity:
    
    (1) Job Role: The user will be able to select a job role from the "Job Role" select drop down. If the user selects "Other" an input element will appear below the drop down for the user to enter their "Other" job role.
     
