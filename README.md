@@ -1,4 +1,4 @@
-# techdegree-project-03
+# Form Validation Project
 
 This project is the Unit 03 Project of the Treehouse Full Stack Javascript Techdegree.
 
