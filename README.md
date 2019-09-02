@@ -2,6 +2,8 @@
 
 This project is the Unit 03 Project of the Treehouse Full Stack Javascript Techdegree.
 
+Form validation is the practice of verifying and responding to a user's input in real-time or on or after the submission of the input. Good form validation can help a user submit accurate and appropriate data. Good form validation can also assist an organization in efficiently handling user data, preventing malicous user intent, and progress a user through their site or application in a friendly, trustworthy, and seamless manner.
+
 The javascript file adds form validation and interactivity to the various inputs throughout
 the form found in index.html. The code provides real-time notifications (through color changes) on the validity of
 input as the user is entering data.
